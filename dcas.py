@@ -4,8 +4,8 @@ import numpy as np
 import shapely
 
 
-path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
-#path='/home/mayijun/DCAS/'
+#path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
+path='/home/mayijun/DCAS/'
 
 
 
@@ -260,13 +260,14 @@ path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
 #mappluto2020=mappluto2020[['BBL','Latitude','Longitude','geometry']].reset_index(drop=True)
 #mappluto2020.to_file(path+'FACILITY/mappluto2020.shp')
 #
-#mappluto2020BB=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-#mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
-#mappluto2020BB=mappluto2020BB.dissolve(by='BB')
-#mappluto2020BB['Latitude']=mappluto2020BB.geometry.centroid.y
-#mappluto2020BB['Longitude']=mappluto2020BB.geometry.centroid.x
-#mappluto2020BB.to_file(path+'FACILITY/mappluto2020BB.shp')
-#
+mappluto2020BB=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
+mappluto2020BB=mappluto2020BB.dissolve(by='BB')
+mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
+mappluto2020BB['Latitude']=mappluto2020BB.geometry.centroid.y
+mappluto2020BB['Longitude']=mappluto2020BB.geometry.centroid.x
+mappluto2020BB.to_file(path+'FACILITY/mappluto2020BB.shp')
+
 ## Clean MapPLUTO 2015
 #mappluto2015bx=gpd.read_file(path+'FACILITY/mappluto_15v1/Bronx/BXMapPLUTO.shp')
 #mappluto2015bx=mappluto2015bx[['BBL','XCoord','YCoord','geometry']].reset_index(drop=True)
@@ -326,18 +327,19 @@ path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
 #mappluto2015=pd.concat([mappluto2015bx,mappluto2015bk,mappluto2015mn,mappluto2015qn,mappluto2015si],axis=0,ignore_index=True)
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
-# Join to facilitybbl
-facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-mappluto2020.crs={'init':'epsg:4326'}
-
-
-facilitybbl=pd.merge(mappluto2020,facilitybbl,how='right',on='BBL')
-
-
-k=facilitybbl[pd.isna(facilitybbl['geometry'])]
-mappluto2015=gpd.read_file(path+'FACILITY/mapplut02015.shp')
-mappluto2015.crs={'init':'epsg:4326'}
-k=pd.merge(mappluto2015,k,how='right',on='BBL')
-k['BBL']=[str(x) for x in k['BBL']]
+## Join to facilitybbl
+#facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+#facilitybbl['BB']=[str(x)[0:6] for x in facilitybbl['BBL']]
+#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+#mappluto2020.crs={'init':'epsg:4326'}
+#facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
+#mappluto2020BB=gpd.read_file(path+'FACILITY/mappluto2020BB.shp')
+#mappluto2020BB.crs={'init':'epsg:4326'}
+#facilitybbl=pd.merge(facilitybbl,mappluto2020BB,how='left',on='BB')
+#
+#
+#k=facilitybbl[pd.isna(facilitybbl['geometry'])]
+#
+#k=pd.merge(mappluto2020BB,k,how='right',on='BBL')
+#k['BBL']=[str(x) for x in k['BBL']]
 
