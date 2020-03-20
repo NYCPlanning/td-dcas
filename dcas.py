@@ -327,19 +327,14 @@ mappluto2020BB.to_file(path+'FACILITY/mappluto2020BB.shp')
 #mappluto2015=pd.concat([mappluto2015bx,mappluto2015bk,mappluto2015mn,mappluto2015qn,mappluto2015si],axis=0,ignore_index=True)
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
-## Join to facilitybbl
-#facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-#facilitybbl['BB']=[str(x)[0:6] for x in facilitybbl['BBL']]
-#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-#mappluto2020.crs={'init':'epsg:4326'}
-#facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
-#mappluto2020BB=gpd.read_file(path+'FACILITY/mappluto2020BB.shp')
-#mappluto2020BB.crs={'init':'epsg:4326'}
-#facilitybbl=pd.merge(facilitybbl,mappluto2020BB,how='left',on='BB')
-#
-#
-#k=facilitybbl[pd.isna(facilitybbl['geometry'])]
-#
-#k=pd.merge(mappluto2020BB,k,how='right',on='BBL')
-#k['BBL']=[str(x) for x in k['BBL']]
-
+# Join to facilitybbl
+facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+mappluto2020.crs={'init':'epsg:4326'}
+mappluto2020=mappluto2020.drop('geometry',axis=1)
+facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
+facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
+facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
+facilitybbl.to_file(path+'FACILITY/facilitybbl.shp')
+# 441 not mapped
+11735-
