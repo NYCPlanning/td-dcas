@@ -338,12 +338,13 @@ facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
 facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
 facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
 facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
+facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
 # 441 BBLs not mapped
 
 # Agg facililtybbl to census tract
-facilitybbl=gpd.read_file(path+'FACILITY/facilitybbl.shp')
-facilitybbl.crs={'init':'epsg:6539'}
-facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
+facilitybbl.crs={'init':'epsg:4326'}
 nycct=gpd.read_file(path+'SHP/nycct.shp')
 nycct.crs={'init':'epsg:4326'}
 nycct.columns=['tract','geometry']
@@ -355,4 +356,5 @@ facilityct=pd.merge(nycctclipped,facilityct,how='left',left_on='tractid',right_o
 facilityct['facility']=np.where(pd.notna(facilityct['BBL']),facilityct['BBL'],0)
 facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
 facilityct.to_file(path+'OUTPUT/facilityct.shp')
+
 
