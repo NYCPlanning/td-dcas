@@ -335,6 +335,9 @@ mappluto2020=mappluto2020.drop('geometry',axis=1)
 facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
 facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
 facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
+facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
 facilitybbl.to_file(path+'FACILITY/facilitybbl.shp')
-# 441 not mapped
-11735-
+# 441 BBLs not mapped
+
+
+
