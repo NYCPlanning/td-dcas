@@ -334,6 +334,7 @@ mappluto2020.crs={'init':'epsg:4326'}
 mappluto2020=mappluto2020.drop('geometry',axis=1)
 facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
 facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
+facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
 facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
 facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
 facilitybbl.to_file(path+'FACILITY/facilitybbl.shp')
