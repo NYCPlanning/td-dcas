@@ -260,14 +260,14 @@ path='/home/mayijun/DCAS/'
 #mappluto2020=mappluto2020[['BBL','Latitude','Longitude','geometry']].reset_index(drop=True)
 #mappluto2020.to_file(path+'FACILITY/mappluto2020.shp')
 #
-mappluto2020BB=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
-mappluto2020BB=mappluto2020BB.dissolve(by='BB')
-mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
-mappluto2020BB['Latitude']=mappluto2020BB.geometry.centroid.y
-mappluto2020BB['Longitude']=mappluto2020BB.geometry.centroid.x
-mappluto2020BB.to_file(path+'FACILITY/mappluto2020BB.shp')
-
+#mappluto2020BB=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+#mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
+#mappluto2020BB=mappluto2020BB.dissolve(by='BB')
+#mappluto2020BB['BB']=[str(x)[0:6] for x in mappluto2020BB['BBL']]
+#mappluto2020BB['Latitude']=mappluto2020BB.geometry.centroid.y
+#mappluto2020BB['Longitude']=mappluto2020BB.geometry.centroid.x
+#mappluto2020BB.to_file(path+'FACILITY/mappluto2020BB.shp')
+#
 ## Clean MapPLUTO 2015
 #mappluto2015bx=gpd.read_file(path+'FACILITY/mappluto_15v1/Bronx/BXMapPLUTO.shp')
 #mappluto2015bx=mappluto2015bx[['BBL','XCoord','YCoord','geometry']].reset_index(drop=True)
@@ -327,7 +327,7 @@ mappluto2020BB.to_file(path+'FACILITY/mappluto2020BB.shp')
 #mappluto2015=pd.concat([mappluto2015bx,mappluto2015bk,mappluto2015mn,mappluto2015qn,mappluto2015si],axis=0,ignore_index=True)
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
-# Join to facilitybbl
+# Geocode facilitybbl
 facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
 mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
 mappluto2020.crs={'init':'epsg:4326'}
@@ -337,8 +337,22 @@ facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True
 facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
 facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
 facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
-facilitybbl.to_file(path+'FACILITY/facilitybbl.shp')
+facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
 # 441 BBLs not mapped
 
-
+# Agg facililtybbl to census tract
+facilitybbl=gpd.read_file(path+'FACILITY/facilitybbl.shp')
+facilitybbl.crs={'init':'epsg:6539'}
+facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+nycct=gpd.read_file(path+'SHP/nycct.shp')
+nycct.crs={'init':'epsg:4326'}
+nycct.columns=['tract','geometry']
+facilityct=gpd.sjoin(facilitybbl,nycct,how='inner',op='intersects')
+facilityct=facilityct.groupby('tract',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
+nycctclipped=gpd.read_file(path+'SHP/nycctclipped.shp')
+nycctclipped.crs={'init':'epsg:4326'}
+facilityct=pd.merge(nycctclipped,facilityct,how='left',left_on='tractid',right_on='tract')
+facilityct['facility']=np.where(pd.notna(facilityct['BBL']),facilityct['BBL'],0)
+facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
+facilityct.to_file(path+'OUTPUT/facilityct.shp')
 
