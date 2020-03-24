@@ -327,34 +327,57 @@ path='/home/mayijun/DCAS/'
 #mappluto2015=pd.concat([mappluto2015bx,mappluto2015bk,mappluto2015mn,mappluto2015qn,mappluto2015si],axis=0,ignore_index=True)
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
-# Geocode facilitybbl
-facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-mappluto2020.crs={'init':'epsg:4326'}
-mappluto2020=mappluto2020.drop('geometry',axis=1)
-facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
-facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
-facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
-facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
-facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
-facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
-facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
-facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
-# 441 BBLs not mapped
+## Geocode facilitybbl
+#facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+#mappluto2020.crs={'init':'epsg:4326'}
+#mappluto2020=mappluto2020.drop('geometry',axis=1)
+#facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
+#facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
+#facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
+#facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
+#facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
+#facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
+#facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+#facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
+## 441 BBLs not mapped
 
-# Agg facililtybbl to census tract
-facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
-facilitybbl.crs={'init':'epsg:4326'}
-nycct=gpd.read_file(path+'SHP/nycct.shp')
-nycct.crs={'init':'epsg:4326'}
-nycct.columns=['tract','geometry']
-facilityct=gpd.sjoin(facilitybbl,nycct,how='inner',op='intersects')
-facilityct=facilityct.groupby('tract',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
-nycctclipped=gpd.read_file(path+'SHP/nycctclipped.shp')
-nycctclipped.crs={'init':'epsg:4326'}
-facilityct=pd.merge(nycctclipped,facilityct,how='left',left_on='tractid',right_on='tract')
-facilityct['facility']=np.where(pd.notna(facilityct['BBL']),facilityct['BBL'],0)
-facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
-facilityct.to_file(path+'OUTPUT/facilityct.shp')
+## Agg facililtybbl to census Block
+#facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
+#facilitybbl.crs={'init':'epsg:4326'}
+#nycbk=gpd.read_file(path+'SHP/nycbk.shp')
+#nycbk.crs={'init':'epsg:4326'}
+#nycbk.columns=['blockid','geometry']
+#facilitybk=gpd.sjoin(facilitybbl,nycbk,how='inner',op='intersects')
+#facilitybk=facilitybk.groupby('blockid',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
+#nycbkclipped=gpd.read_file(path+'SHP/nycbkclipped.shp')
+#nycbkclipped.crs={'init':'epsg:4326'}
+#facilitybk=pd.merge(nycbkclipped,facilitybk,how='left',on='blockid')
+#facilitybk['facility']=facilitybk['facility'].fillna(0)
+#facilitybk=facilitybk[['blockid','facility','geometry']].reset_index(drop=True)
+#facilitybk.to_file(path+'OUTPUT/facilitybk.shp')
+#
+## Agg facililtybbl to census tract
+#facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
+#facilitybbl.crs={'init':'epsg:4326'}
+#nycct=gpd.read_file(path+'SHP/nycct.shp')
+#nycct.crs={'init':'epsg:4326'}
+#nycct.columns=['tract','geometry']
+#facilityct=gpd.sjoin(facilitybbl,nycct,how='inner',op='intersects')
+#facilityct=facilityct.groupby('tract',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
+#nycctclipped=gpd.read_file(path+'SHP/nycctclipped.shp')
+#nycctclipped.crs={'init':'epsg:4326'}
+#facilityct=pd.merge(nycctclipped,facilityct,how='left',left_on='tractid',right_on='tract')
+#facilityct['facility']=np.where(pd.notna(facilityct['BBL']),facilityct['BBL'],0)
+#facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
+#facilityct.to_file(path+'OUTPUT/facilityct.shp')
 
+nycbk=gpd.read_file(path+'quadstatebk.shp')
+nycbk.crs={'init':'epsg:4326'}
+nycbk=nycbk[[str(x)[0:5] in ['36005','36047','36061','36081','36085'] for x in nycbk['blockid']]].reset_index(drop=True)
+nycbk.to_file(path+'nycbk.shp')
 
+nycbkclipped=gpd.read_file(path+'quadstatebkclipped.shp')
+nycbkclipped.crs={'init':'epsg:4326'}
+nycbkclipped=nycbkclipped[[str(x)[0:5] in ['36005','36047','36061','36081','36085'] for x in nycbkclipped['blockid']]].reset_index(drop=True)
+nycbkclipped.to_file(path+'nycbkclipped.shp')
