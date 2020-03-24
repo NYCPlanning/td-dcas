@@ -4,8 +4,8 @@ import numpy as np
 import shapely
 
 
-#path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
-path='/home/mayijun/DCAS/'
+path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
+#path='/home/mayijun/DCAS/'
 
 
 
@@ -372,12 +372,15 @@ path='/home/mayijun/DCAS/'
 #facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
 #facilityct.to_file(path+'OUTPUT/facilityct.shp')
 
-# Combination
+# Calculate DCAS Index
 facilitybblheat=gpd.read_file(path+'OUTPUT/facilitybblheat.shp')
 facilitybblheat.crs={'init':'epsg:4326'}
 dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
 dcasct.crs={'init':'epsg:4326'}
 dcasindex=gpd.sjoin(facilitybblheat,dcasct,how='inner',op='intersects')
-
-
+dcasindex['facindex']=pd.qcut(dcasindex['facilitybb'],10,labels=False)+1
+dcasindex['spdindex']=10-pd.qcut(dcasindex['avgspeed'],10,labels=False)
+dcasindex['dcasindex']=(dcasindex['facindex']+dcasindex['spdindex'])/2
+dcasindex=dcasindex[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
+dcasindex.to_file(path+'OUTPUT/dcasindex.shp')
 
