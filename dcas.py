@@ -341,19 +341,19 @@ path='/home/mayijun/DCAS/'
 #facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
 #facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
 ## 441 BBLs not mapped
-
+#
 ## Agg facililtybbl to census Block
 #facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
 #facilitybbl.crs={'init':'epsg:4326'}
 #nycbk=gpd.read_file(path+'SHP/nycbk.shp')
 #nycbk.crs={'init':'epsg:4326'}
-#nycbk.columns=['blockid','geometry']
+#nycbk=nycbk[['blockid','geometry']].reset_index(drop=True)
 #facilitybk=gpd.sjoin(facilitybbl,nycbk,how='inner',op='intersects')
 #facilitybk=facilitybk.groupby('blockid',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
 #nycbkclipped=gpd.read_file(path+'SHP/nycbkclipped.shp')
 #nycbkclipped.crs={'init':'epsg:4326'}
 #facilitybk=pd.merge(nycbkclipped,facilitybk,how='left',on='blockid')
-#facilitybk['facility']=facilitybk['facility'].fillna(0)
+#facilitybk['facility']=np.where(pd.notna(facilitybk['BBL']),facilitybk['BBL'],0)
 #facilitybk=facilitybk[['blockid','facility','geometry']].reset_index(drop=True)
 #facilitybk.to_file(path+'OUTPUT/facilitybk.shp')
 #
@@ -372,12 +372,12 @@ path='/home/mayijun/DCAS/'
 #facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
 #facilityct.to_file(path+'OUTPUT/facilityct.shp')
 
-nycbk=gpd.read_file(path+'quadstatebk.shp')
-nycbk.crs={'init':'epsg:4326'}
-nycbk=nycbk[[str(x)[0:5] in ['36005','36047','36061','36081','36085'] for x in nycbk['blockid']]].reset_index(drop=True)
-nycbk.to_file(path+'nycbk.shp')
+# Combination
+facilitybblheat=gpd.read_file(path+'OUTPUT/facilitybblheat.shp')
+facilitybblheat.crs={'init':'epsg:4326'}
+dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
+dcasct.crs={'init':'epsg:4326'}
+dcasindex=gpd.sjoin(facilitybblheat,dcasct,how='inner',op='intersects')
 
-nycbkclipped=gpd.read_file(path+'quadstatebkclipped.shp')
-nycbkclipped.crs={'init':'epsg:4326'}
-nycbkclipped=nycbkclipped[[str(x)[0:5] in ['36005','36047','36061','36081','36085'] for x in nycbkclipped['blockid']]].reset_index(drop=True)
-nycbkclipped.to_file(path+'nycbkclipped.shp')
+
+
