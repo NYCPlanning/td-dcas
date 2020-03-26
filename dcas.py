@@ -327,21 +327,35 @@ path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
 #mappluto2015=pd.concat([mappluto2015bx,mappluto2015bk,mappluto2015mn,mappluto2015qn,mappluto2015si],axis=0,ignore_index=True)
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
-## Geocode facilitybbl
-#facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-#mappluto2020.crs={'init':'epsg:4326'}
-#mappluto2020=mappluto2020.drop('geometry',axis=1)
-#facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
-#facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
-#facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
-#facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
-#facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
-#facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
-#facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
-#facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
-## 441 BBLs not mapped
-#
+# Geocode facilitybbl
+facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+facilitybbl=facilitybbl.groupby()
+mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+mappluto2020.crs={'init':'epsg:4326'}
+mappluto2020=mappluto2020.drop('geometry',axis=1)
+facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
+facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
+facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
+facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
+facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
+facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
+facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
+# 441 BBLs not mapped
+
+facilityparcel=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+facilityparcel['id']=facilityparcel['BORO']+'|'+facilityparcel['PARCEL_NAME']
+mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+mappluto2020.crs={'init':'epsg:4326'}
+facilityparcel=pd.merge(mappluto2020,facilityparcel,how='inner',on='BBL')
+facilityparcel=facilityparcel.dissolve(by='id').reset_index(drop=True)
+facilityparcel['geometry']=facilityparcel.centroid
+facilityparcel=facilityparcel.to_crs({'init':'epsg:6539'})
+facilityparcel.to_file(path+'OUTPUT/facilityparcel.shp')
+facilityparcel=facilityparcel.to_crs({'init':'epsg:4326'})
+facilityparcel.to_file(path+'OUTPUT/facilityparcelwgs.shp')
+# 441 BBLs not mapped
+
 ## Agg facililtybbl to census Block
 #facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
 #facilitybbl.crs={'init':'epsg:4326'}
@@ -372,15 +386,26 @@ path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
 #facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
 #facilityct.to_file(path+'OUTPUT/facilityct.shp')
 
+## Calculate DCAS Index
+#facilitybblheat=gpd.read_file(path+'OUTPUT/facilitybblheat.shp')
+#facilitybblheat.crs={'init':'epsg:4326'}
+#dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
+#dcasct.crs={'init':'epsg:4326'}
+#dcasindex=gpd.sjoin(facilitybblheat,dcasct,how='inner',op='intersects')
+#dcasindex['facindex']=pd.qcut(dcasindex['facilitybb'],10,labels=False)+1
+#dcasindex['spdindex']=10-pd.qcut(dcasindex['avgspeed'],10,labels=False)
+#dcasindex['dcasindex']=(dcasindex['facindex']+dcasindex['spdindex'])/2
+#dcasindex=dcasindex[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
+#dcasindex.to_file(path+'OUTPUT/dcasindex.shp')
+
 # Calculate DCAS Index
-facilitybblheat=gpd.read_file(path+'OUTPUT/facilitybblheat.shp')
-facilitybblheat.crs={'init':'epsg:4326'}
+facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
+facilityparcelheat.crs={'init':'epsg:4326'}
 dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
 dcasct.crs={'init':'epsg:4326'}
-dcasindex=gpd.sjoin(facilitybblheat,dcasct,how='inner',op='intersects')
-dcasindex['facindex']=pd.qcut(dcasindex['facilitybb'],10,labels=False)+1
-dcasindex['spdindex']=10-pd.qcut(dcasindex['avgspeed'],10,labels=False)
-dcasindex['dcasindex']=(dcasindex['facindex']+dcasindex['spdindex'])/2
-dcasindex=dcasindex[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
-dcasindex.to_file(path+'OUTPUT/dcasindex.shp')
-
+dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
+dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],10,labels=False)+1
+dcasindexparcel['spdindex']=10-pd.qcut(dcasindexparcel['avgspeed'],10,labels=False)
+dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])/2
+dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
+dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
