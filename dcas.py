@@ -404,17 +404,17 @@ path='/home/mayijun/DCAS/'
 #dcasindex=dcasindex[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
 #dcasindex.to_file(path+'OUTPUT/dcasindex.shp')
 #
-## Calculate DCAS Index
-#facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
-#facilityparcelheat.crs={'init':'epsg:4326'}
-#dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
-#dcasct.crs={'init':'epsg:4326'}
-#dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
-#dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],7,labels=False)+1
-#dcasindexparcel['spdindex']=7-pd.qcut(dcasindexparcel['avgspeed'],7,labels=False)
-#dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])/2
-#dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
-#dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
+# Calculate DCAS Index
+facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
+facilityparcelheat.crs={'init':'epsg:4326'}
+dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
+dcasct.crs={'init':'epsg:4326'}
+dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
+dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],20,labels=False)+1
+dcasindexparcel['spdindex']=20-pd.qcut(dcasindexparcel['avgspeed'],20,labels=False)
+dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])/2
+dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
+dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
 
 # DCAS Index by Community District
 dcasindexparcel=gpd.read_file(path+'OUTPUT/dcasindexparcel.shp')
@@ -426,4 +426,4 @@ dcasindexcommunity=gpd.sjoin(dcasindexparcel,communityclipped,how='inner',op='in
 dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':['mean','sum']}).reset_index(drop=True)
 dcasindexcommunity.columns=['BoroCD','dcasindexmean','dcasindexsum']
 dcasindexcommunity=pd.merge(communityclipped,dcasindexcommunity,how='inner',on='BoroCD')
-dcasindexcommunity.to_file(path+'OUTPUT/dcasindexcommunity.shp')
+dcasindexcommunity.to_file(path+'dcasindexcommunity.shp')
