@@ -423,5 +423,7 @@ dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_in
 communityclipped=gpd.read_file(path+'SHP/communityclipped.shp')
 communityclipped.crs={'init':'epsg:4326'}
 dcasindexcommunity=gpd.sjoin(dcasindexparcel,communityclipped,how='inner',op='intersects')
-dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':'mean'}).reset_index(drop=True)
-dcasindexcommunity.to_csv(path+'dcasindexcommunity.csv',index=False)
+dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':['mean','sum']}).reset_index(drop=True)
+dcasindexcommunity.columns=['BoroCD','dcasindexmean','dcasindexsum']
+dcasindexcommunity=pd.merge(communityclipped,dcasindexcommunity,how='inner',on='BoroCD')
+dcasindexcommunity.to_file(path+'OUTPUT/dcasindexcommunity.shp')
