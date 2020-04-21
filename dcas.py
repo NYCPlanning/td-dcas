@@ -4,6 +4,8 @@ import numpy as np
 import shapely
 
 
+
+pd.set_option('display.max_columns', None)
 path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
 #path='/home/mayijun/DCAS/'
 
@@ -328,26 +330,27 @@ path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
 # Geocode facilitybbl
-facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-facilitybbl=facilitybbl.groupby()
-mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-mappluto2020.crs={'init':'epsg:4326'}
-mappluto2020=mappluto2020.drop('geometry',axis=1)
-facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
-facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
-facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
-facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
-facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
-facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
-facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
-facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
-# 441 BBLs not mapped
+#facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+#facilitybbl=facilitybbl.groupby()
+#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+#mappluto2020.crs={'init':'epsg:4326'}
+#mappluto2020=mappluto2020.drop('geometry',axis=1)
+#facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
+#facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
+#facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
+#facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
+#facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
+#facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
+#facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+#facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
+## 441 BBLs not mapped
 
 facilityparcel=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
 facilityparcel['id']=facilityparcel['BORO']+'|'+facilityparcel['PARCEL_NAME']
 mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
 mappluto2020.crs={'init':'epsg:4326'}
 facilityparcel=pd.merge(mappluto2020,facilityparcel,how='inner',on='BBL')
+facilityparcel=facilityparcel[[(str(x)[0:2]!='04')|(str(x)[0:3] in ['045','046']) for x in facilityparcel['Primary UseCode']]].reset_index(drop=True)
 facilityparcel=facilityparcel.dissolve(by='id').reset_index(drop=True)
 facilityparcel['geometry']=facilityparcel.centroid
 facilityparcel=facilityparcel.to_crs({'init':'epsg:6539'})
@@ -355,6 +358,9 @@ facilityparcel.to_file(path+'OUTPUT/facilityparcel.shp')
 facilityparcel=facilityparcel.to_crs({'init':'epsg:4326'})
 facilityparcel.to_file(path+'OUTPUT/facilityparcelwgs.shp')
 # 441 BBLs not mapped
+# QGIS/Raster/Heatmap/Heatmap/Radius: 5000; Cell Size: 300
+# Processing/SAGA/Vector<->Raster/Raster Values to Points/Grids:GeoTiff; Exclude No Data; Cells;
+
 
 ## Agg facililtybbl to census Block
 #facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
@@ -404,8 +410,8 @@ facilityparcelheat.crs={'init':'epsg:4326'}
 dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
 dcasct.crs={'init':'epsg:4326'}
 dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
-dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],10,labels=False)+1
-dcasindexparcel['spdindex']=10-pd.qcut(dcasindexparcel['avgspeed'],10,labels=False)
+dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],7,labels=False)+1
+dcasindexparcel['spdindex']=7-pd.qcut(dcasindexparcel['avgspeed'],7,labels=False)
 dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])/2
 dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
 dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
