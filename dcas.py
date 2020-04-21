@@ -404,26 +404,38 @@ path='/home/mayijun/DCAS/'
 #dcasindex=dcasindex[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
 #dcasindex.to_file(path+'OUTPUT/dcasindex.shp')
 #
-# Calculate DCAS Index
-facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
-facilityparcelheat.crs={'init':'epsg:4326'}
-dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
-dcasct.crs={'init':'epsg:4326'}
-dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
-dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],50,labels=False)+1
-dcasindexparcel['spdindex']=50-pd.qcut(dcasindexparcel['avgspeed'],50,labels=False)
-dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])
-dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
-dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
+## Calculate DCAS Index
+#facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
+#facilityparcelheat.crs={'init':'epsg:4326'}
+#dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
+#dcasct.crs={'init':'epsg:4326'}
+#dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
+#dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],50,labels=False)+1
+#dcasindexparcel['spdindex']=50-pd.qcut(dcasindexparcel['avgspeed'],50,labels=False)
+#dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])
+#dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
+#dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
+
+# DCAS Index by NTA
+dcasindexparcel=gpd.read_file(path+'OUTPUT/dcasindexparcel.shp')
+dcasindexparcel.crs={'init':'epsg:4326'}
+dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_index(drop=True)
+ntaclippedadj=gpd.read_file(path+'SHP/ntaclippedadj.shp')
+ntaclippedadj.crs={'init':'epsg:4326'}
+dcasindexnta=gpd.sjoin(dcasindexparcel,ntaclippedadj,how='inner',op='intersects')
+dcasindexnta=dcasindexnta.groupby(['NTACode','NTAName'],as_index=False).agg({'dcasindex':['mean','sum']}).reset_index(drop=True)
+dcasindexnta.columns=['NTACode','NTAName','dcasindexmean','dcasindexsum']
+dcasindexnta=pd.merge(ntaclippedadj,dcasindexnta,how='inner',on=['NTACode','NTAName'])
+dcasindexnta.to_file(path+'OUTPUT/dcasindexnta.shp')
 
 # DCAS Index by Community District
 dcasindexparcel=gpd.read_file(path+'OUTPUT/dcasindexparcel.shp')
 dcasindexparcel.crs={'init':'epsg:4326'}
 dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_index(drop=True)
-communityclipped=gpd.read_file(path+'SHP/communityclipped.shp')
-communityclipped.crs={'init':'epsg:4326'}
-dcasindexcommunity=gpd.sjoin(dcasindexparcel,communityclipped,how='inner',op='intersects')
+communityclippedadj=gpd.read_file(path+'SHP/communityclippedadj.shp')
+communityclippedadj.crs={'init':'epsg:4326'}
+dcasindexcommunity=gpd.sjoin(dcasindexparcel,communityclippedadj,how='inner',op='intersects')
 dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':['mean','sum']}).reset_index(drop=True)
 dcasindexcommunity.columns=['BoroCD','dcasindexmean','dcasindexsum']
-dcasindexcommunity=pd.merge(communityclipped,dcasindexcommunity,how='inner',on='BoroCD')
+dcasindexcommunity=pd.merge(communityclippedadj,dcasindexcommunity,how='inner',on='BoroCD')
 dcasindexcommunity.to_file(path+'OUTPUT/dcasindexcommunity.shp')
