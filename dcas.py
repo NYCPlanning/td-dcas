@@ -423,8 +423,7 @@ dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_in
 ntaclippedadj=gpd.read_file(path+'SHP/ntaclippedadj.shp')
 ntaclippedadj.crs={'init':'epsg:4326'}
 dcasindexnta=gpd.sjoin(dcasindexparcel,ntaclippedadj,how='inner',op='intersects')
-dcasindexnta=dcasindexnta.groupby(['NTACode','NTAName'],as_index=False).agg({'dcasindex':['mean','sum']}).reset_index(drop=True)
-dcasindexnta.columns=['NTACode','NTAName','dcasindexmean','dcasindexsum']
+dcasindexnta=dcasindexnta.groupby(['NTACode','NTAName'],as_index=False).agg({'dcasindex':'mean'}).reset_index(drop=True)
 dcasindexnta=pd.merge(ntaclippedadj,dcasindexnta,how='inner',on=['NTACode','NTAName'])
 dcasindexnta.to_file(path+'OUTPUT/dcasindexnta.shp')
 
@@ -435,7 +434,6 @@ dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_in
 communityclippedadj=gpd.read_file(path+'SHP/communityclippedadj.shp')
 communityclippedadj.crs={'init':'epsg:4326'}
 dcasindexcommunity=gpd.sjoin(dcasindexparcel,communityclippedadj,how='inner',op='intersects')
-dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':['mean','sum']}).reset_index(drop=True)
-dcasindexcommunity.columns=['BoroCD','dcasindexmean','dcasindexsum']
+dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':'mean'}).reset_index(drop=True)
 dcasindexcommunity=pd.merge(communityclippedadj,dcasindexcommunity,how='inner',on='BoroCD')
 dcasindexcommunity.to_file(path+'OUTPUT/dcasindexcommunity.shp')
