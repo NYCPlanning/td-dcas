@@ -6,8 +6,8 @@ import shapely
 
 
 pd.set_option('display.max_columns', None)
-path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
-#path='/home/mayijun/DCAS/'
+#path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
+path='/home/mayijun/DCAS/'
 
 
 
@@ -410,8 +410,8 @@ facilityparcelheat.crs={'init':'epsg:4326'}
 dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
 dcasct.crs={'init':'epsg:4326'}
 dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
-dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],7,labels=False)+1
-dcasindexparcel['spdindex']=7-pd.qcut(dcasindexparcel['avgspeed'],7,labels=False)
+dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],100,labels=False)+1
+dcasindexparcel['spdindex']=100-pd.qcut(dcasindexparcel['avgspeed'],100,labels=False)
 dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])/2
 dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
 dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
