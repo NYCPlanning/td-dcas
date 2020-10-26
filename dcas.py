@@ -6,7 +6,7 @@ import shapely
 
 
 pd.set_option('display.max_columns', None)
-#path='C:/Users/Yijun Ma/Desktop/D/DOCUMENT/DCP2020/DCAS/'
+path='C:/Users/mayij/Desktop/DOC/DCP2020/DCAS/'
 path='/home/mayijun/DCAS/'
 
 
@@ -331,7 +331,6 @@ path='/home/mayijun/DCAS/'
 
 # Geocode facilitybbl
 #facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-#facilitybbl=facilitybbl.groupby()
 #mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
 #mappluto2020.crs={'init':'epsg:4326'}
 #mappluto2020=mappluto2020.drop('geometry',axis=1)
