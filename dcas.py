@@ -330,90 +330,50 @@ path='/home/mayijun/DCAS/'
 #mappluto2015.to_file(path+'FACILITY/mappluto2015.shp')
 
 # Geocode facilitybbl
-#facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-#mappluto2020.crs={'init':'epsg:4326'}
-#mappluto2020=mappluto2020.drop('geometry',axis=1)
-#facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
-#facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
-#facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
-#facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
-#facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
-#facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
-#facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
-#facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
-## 441 BBLs not mapped
+# facilitybbl=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+# mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+# mappluto2020.crs={'init':'epsg:4326'}
+# mappluto2020=mappluto2020.drop('geometry',axis=1)
+# facilitybbl=pd.merge(facilitybbl,mappluto2020,how='left',on='BBL')
+# facilitybbl=facilitybbl[pd.notna(facilitybbl['Latitude'])].reset_index(drop=True)
+# facilitybbl['PROP_SQFT']=pd.to_numeric(facilitybbl['PROP_SQFT'])
+# facilitybbl=gpd.GeoDataFrame(facilitybbl,geometry=[shapely.geometry.Point(x, y) for x, y in zip(facilitybbl['Longitude'],facilitybbl['Latitude'])],crs={'init':'epsg:4326'})
+# facilitybbl=facilitybbl.to_crs({'init':'epsg:6539'})
+# facilitybbl.to_file(path+'OUTPUT/facilitybbl.shp')
+# facilitybbl=facilitybbl.to_crs({'init':'epsg:4326'})
+# facilitybbl.to_file(path+'OUTPUT/facilitybblwgs.shp')
+# # 441 BBLs not mapped
 
-#facilityparcel=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
-#facilityparcel['id']=facilityparcel['BORO']+'|'+facilityparcel['PARCEL_NAME']
-#mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
-#mappluto2020.crs={'init':'epsg:4326'}
-#facilityparcel=pd.merge(mappluto2020,facilityparcel,how='inner',on='BBL')
-#facilityparcel=facilityparcel[[(str(x)[0:2]!='04')|(str(x)[0:3] in ['045','046']) for x in facilityparcel['Primary UseCode']]].reset_index(drop=True)
-#facilityparcel=facilityparcel.dissolve(by='id').reset_index(drop=True)
-#facilityparcel['geometry']=facilityparcel.centroid
-#facilityparcel=facilityparcel.to_crs({'init':'epsg:6539'})
-#facilityparcel.to_file(path+'OUTPUT/facilityparcel.shp')
-#facilityparcel=facilityparcel.to_crs({'init':'epsg:4326'})
-#facilityparcel.to_file(path+'OUTPUT/facilityparcelwgs.shp')
+facilityparcel=pd.read_csv(path+'FACILITY/FacilityBBL.csv',dtype=str,converters={'BBL':float})
+facilityparcel['id']=facilityparcel['BORO']+'|'+facilityparcel['PARCEL_NAME']
+mappluto2020=gpd.read_file(path+'FACILITY/mappluto2020.shp')
+mappluto2020.crs={'init':'epsg:4326'}
+facilityparcel=pd.merge(mappluto2020,facilityparcel,how='inner',on='BBL')
+facilityparcel=facilityparcel[[(str(x)[0:2]!='04')|(str(x)[0:3] in ['045','046']) for x in facilityparcel['Primary UseCode']]].reset_index(drop=True)
+facilityct=facilityparcel.groupby('id',as_index=True).agg({'BBL':'count'}).reset_index(drop=False)
+facilityct.columns=['id','facility']
+facilityparcel=facilityparcel.dissolve(by='id').reset_index(drop=False)
+facilityparcel['geometry']=facilityparcel.centroid
+facilityparcel=pd.merge(facilityparcel,facilityct,how='inner',on='id')
+facilityparcel=facilityparcel.to_crs({'init':'epsg:6539'})
+facilityparcel.to_file(path+'OUTPUT/facilityparcel.shp')
+facilityparcel=facilityparcel.to_crs({'init':'epsg:4326'})
+facilityparcel.to_file(path+'OUTPUT/facilityparcelwgs.shp')
 # 441 BBLs not mapped
 # QGIS/Raster/Heatmap/Heatmap/Radius: 5000; Cell Size: 300
 # Processing/SAGA/Vector<->Raster/Raster Values to Points/Grids:GeoTiff; Exclude No Data; Cells;
 
-
-## Agg facililtybbl to census Block
-#facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
-#facilitybbl.crs={'init':'epsg:4326'}
-#nycbk=gpd.read_file(path+'SHP/nycbk.shp')
-#nycbk.crs={'init':'epsg:4326'}
-#nycbk=nycbk[['blockid','geometry']].reset_index(drop=True)
-#facilitybk=gpd.sjoin(facilitybbl,nycbk,how='inner',op='intersects')
-#facilitybk=facilitybk.groupby('blockid',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
-#nycbkclipped=gpd.read_file(path+'SHP/nycbkclipped.shp')
-#nycbkclipped.crs={'init':'epsg:4326'}
-#facilitybk=pd.merge(nycbkclipped,facilitybk,how='left',on='blockid')
-#facilitybk['facility']=np.where(pd.notna(facilitybk['BBL']),facilitybk['BBL'],0)
-#facilitybk=facilitybk[['blockid','facility','geometry']].reset_index(drop=True)
-#facilitybk.to_file(path+'OUTPUT/facilitybk.shp')
-#
-## Agg facililtybbl to census tract
-#facilitybbl=gpd.read_file(path+'OUTPUT/facilitybblwgs.shp')
-#facilitybbl.crs={'init':'epsg:4326'}
-#nycct=gpd.read_file(path+'SHP/nycct.shp')
-#nycct.crs={'init':'epsg:4326'}
-#nycct.columns=['tract','geometry']
-#facilityct=gpd.sjoin(facilitybbl,nycct,how='inner',op='intersects')
-#facilityct=facilityct.groupby('tract',as_index=False).agg({'BBL':'count'}).reset_index(drop=True)
-#nycctclipped=gpd.read_file(path+'SHP/nycctclipped.shp')
-#nycctclipped.crs={'init':'epsg:4326'}
-#facilityct=pd.merge(nycctclipped,facilityct,how='left',left_on='tractid',right_on='tract')
-#facilityct['facility']=np.where(pd.notna(facilityct['BBL']),facilityct['BBL'],0)
-#facilityct=facilityct[['tractid','facility','geometry']].reset_index(drop=True)
-#facilityct.to_file(path+'OUTPUT/facilityct.shp')
-
-## Calculate DCAS Index
-#facilitybblheat=gpd.read_file(path+'OUTPUT/facilitybblheat.shp')
-#facilitybblheat.crs={'init':'epsg:4326'}
-#dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
-#dcasct.crs={'init':'epsg:4326'}
-#dcasindex=gpd.sjoin(facilitybblheat,dcasct,how='inner',op='intersects')
-#dcasindex['facindex']=pd.qcut(dcasindex['facilitybb'],10,labels=False)+1
-#dcasindex['spdindex']=10-pd.qcut(dcasindex['avgspeed'],10,labels=False)
-#dcasindex['dcasindex']=(dcasindex['facindex']+dcasindex['spdindex'])/2
-#dcasindex=dcasindex[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
-#dcasindex.to_file(path+'OUTPUT/dcasindex.shp')
-#
-## Calculate DCAS Index
-#facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
-#facilityparcelheat.crs={'init':'epsg:4326'}
-#dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
-#dcasct.crs={'init':'epsg:4326'}
-#dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
-#dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],50,labels=False)+1
-#dcasindexparcel['spdindex']=50-pd.qcut(dcasindexparcel['avgspeed'],50,labels=False)
-#dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])
-#dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
-#dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
+# Calculate DCAS Index
+facilityparcelheat=gpd.read_file(path+'OUTPUT/facilityparcelheat.shp')
+facilityparcelheat.crs={'init':'epsg:4326'}
+dcasct=gpd.read_file(path+'OUTPUT/dcasct.shp')
+dcasct.crs={'init':'epsg:4326'}
+dcasindexparcel=gpd.sjoin(facilityparcelheat,dcasct,how='inner',op='intersects')
+dcasindexparcel['facindex']=pd.qcut(dcasindexparcel['facilitypa'],50,labels=False)+1
+dcasindexparcel['spdindex']=50-pd.qcut(dcasindexparcel['avgspeed'],50,labels=False)
+dcasindexparcel['dcasindex']=(dcasindexparcel['facindex']+dcasindexparcel['spdindex'])
+dcasindexparcel=dcasindexparcel[['facindex','spdindex','dcasindex','geometry']].reset_index(drop=True)
+dcasindexparcel.to_file(path+'OUTPUT/dcasindexparcel.shp')
 
 # DCAS Index by NTA
 dcasindexparcel=gpd.read_file(path+'OUTPUT/dcasindexparcel.shp')
@@ -422,8 +382,17 @@ dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_in
 ntaclippedadj=gpd.read_file(path+'SHP/ntaclippedadj.shp')
 ntaclippedadj.crs={'init':'epsg:4326'}
 dcasindexnta=gpd.sjoin(dcasindexparcel,ntaclippedadj,how='inner',op='intersects')
-dcasindexnta=dcasindexnta.groupby(['NTACode','NTAName'],as_index=False).agg({'dcasindex':'mean'}).reset_index(drop=True)
+dcasindexnta=dcasindexnta.groupby(['NTACode','NTAName'],as_index=False).agg({'facindex':'mean',
+                                                                             'spdindex':'mean',
+                                                                             'dcasindex':'mean'}).reset_index(drop=True)
+facilityntact=gpd.read_file(path+'OUTPUT/facilityparcelwgs.shp')
+facilityntact.crs={'init':'epsg:4326'}
+facilityntact=gpd.sjoin(facilityntact,ntaclippedadj,how='inner',op='intersects')
+facilityntact=facilityntact.groupby(['NTACode','NTAName'],as_index=False).agg({'id':'count',
+                                                                               'facility':'sum'}).reset_index(drop=True)
+facilityntact.columns=['NTACode','NTAName','parcel','facility']
 dcasindexnta=pd.merge(ntaclippedadj,dcasindexnta,how='inner',on=['NTACode','NTAName'])
+dcasindexnta=pd.merge(dcasindexnta,facilityntact,how='inner',on=['NTACode','NTAName'])
 dcasindexnta.to_file(path+'OUTPUT/dcasindexnta.shp')
 
 # DCAS Index by Community District
@@ -433,6 +402,18 @@ dcasindexparcel=dcasindexparcel[pd.notna(dcasindexparcel['dcasindex'])].reset_in
 communityclippedadj=gpd.read_file(path+'SHP/communityclippedadj.shp')
 communityclippedadj.crs={'init':'epsg:4326'}
 dcasindexcommunity=gpd.sjoin(dcasindexparcel,communityclippedadj,how='inner',op='intersects')
-dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'dcasindex':'mean'}).reset_index(drop=True)
+dcasindexcommunity=dcasindexcommunity.groupby('BoroCD',as_index=False).agg({'facindex':'mean',
+                                                                            'spdindex':'mean',
+                                                                            'dcasindex':'mean'}).reset_index(drop=True)
+
+facilitycdct=gpd.read_file(path+'OUTPUT/facilityparcelwgs.shp')
+facilitycdct.crs={'init':'epsg:4326'}
+communityclipped=gpd.read_file(path+'SHP/communityclipped.shp')
+communityclipped.crs={'init':'epsg:4326'}
+facilitycdct=gpd.sjoin(facilitycdct,communityclipped,how='inner',op='intersects')
+facilitycdct=facilitycdct.groupby('BoroCD',as_index=False).agg({'id':'count',
+                                                                'facility':'sum'}).reset_index(drop=True)
+facilitycdct.columns=['BoroCD','parcel','facility']
 dcasindexcommunity=pd.merge(communityclippedadj,dcasindexcommunity,how='inner',on='BoroCD')
+dcasindexcommunity=pd.merge(dcasindexcommunity,facilitycdct,how='inner',on='BoroCD')
 dcasindexcommunity.to_file(path+'OUTPUT/dcasindexcommunity.shp')
